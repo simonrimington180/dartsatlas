@@ -1,0 +1,43 @@
+name: Darts Atlas (Daily)
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # 09:00 UTC daily (UK winter time)
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repo files
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Chrome + Chromedriver
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+          install-chromedriver: true
+
+      - name: Run your script
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python run_scrapers.py
+
+      - name: Upload txt outputs to download
+        uses: actions/upload-artifact@v4
+        with:
+          name: darts-results
+          path: "*.txt"
+          if-no-files-found: warn

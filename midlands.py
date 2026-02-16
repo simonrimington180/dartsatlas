@@ -88,7 +88,26 @@ def start_driver() -> webdriver.Chrome:
     opts.add_argument("--disable-gpu")
     return webdriver.Chrome(options=opts)
 
-def wait_for_listing_render(driver: webdriver.Chrome, timeout: int = 40) -> None:
+def wait_for_listing_render(driver: webdriver.Chrome, timeout: int = 90) -> None:
+    # Wait for page body first
+    WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.TAG_NAME, "body"))
+    )
+
+    # Try to wait for tournaments
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "a[href^='/tournaments/']"))
+        )
+        return
+    except Exception:
+        pass
+
+    # Fallback — sometimes page renders slower on GitHub
+    import time
+    time.sleep(10)
+
+    # Try again
     WebDriverWait(driver, timeout).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "a[href^='/tournaments/']"))
     )

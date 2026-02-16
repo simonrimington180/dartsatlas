@@ -28,15 +28,26 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Run scrapers
+      - name: Run scrapers + email
         env:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: |
           python run_scrapers.py
 
       - name: Upload txt outputs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: darts-results
           path: "*.txt"
           if-no-files-found: warn
+
+      - name: Upload debug files (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug
+          path: |
+            debug_page.html
+            debug_page.png
+          if-no-files-found: ignore

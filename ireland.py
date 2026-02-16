@@ -111,7 +111,6 @@ def wait_for_listing_render(driver: webdriver.Chrome, timeout: int = 90) -> None
     WebDriverWait(driver, timeout).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "a[href^='/tournaments/']"))
     )
-
     def _has_date(drv: webdriver.Chrome) -> bool:
         try:
             body_text = drv.find_element(By.TAG_NAME, "body").text

@@ -23,11 +23,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Chrome + Chromedriver
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable
-          install-chromedriver: true
+    - name: Install Chrome
+  uses: browser-actions/setup-chrome@v1
+  with:
+    chrome-version: stable
 
       - name: Run your script
         env:

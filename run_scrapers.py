@@ -81,5 +81,6 @@ for path in file_paths:
 
 # send email via SMTP
 with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-    smtp.login("simonrimington@gmail.com", "yrnjmwrrgdzwaeeu")
+    smtp.login("simonrimington@gmail.com", os.environ["GMAIL_APP_PASSWORD"])
     smtp.send_message(msg, to_addrs=recipients)
+

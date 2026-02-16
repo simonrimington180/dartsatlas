@@ -7,8 +7,10 @@ import os
 # calculate yesterday's date
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
 
-# paths to the eleven scraper scripts (adjust if your folder is different)
-folder = r"C:\\darts_scrapers"
+# IMPORTANT: use the folder this script is in (works on GitHub Actions + Windows)
+folder = os.path.dirname(os.path.abspath(__file__))
+
+# paths to the eleven scraper scripts
 scripts = [
     os.path.join(folder, "yorkshire.py"),
     os.path.join(folder, "northwest.py"),
@@ -61,7 +63,6 @@ recipients = [
     "james.mulvaney@dartscircuit.com",
     "scott@dartscircuit.com",
 ]
-
 msg["To"] = ", ".join(recipients)
 
 msg.set_content(f"Attached are the high-average results for {yesterday}.")
@@ -83,4 +84,3 @@ for path in file_paths:
 with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
     smtp.login("simonrimington@gmail.com", os.environ["GMAIL_APP_PASSWORD"])
     smtp.send_message(msg, to_addrs=recipients)
-

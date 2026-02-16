@@ -3,14 +3,65 @@ import subprocess
 import smtplib
 from email.message import EmailMessage
 import os
+import re
+import sys
+import time
 
 # calculate yesterday's date
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
 
-# IMPORTANT: use the folder this script is in (works on GitHub Actions + Windows)
+# use the folder this script is in (works on GitHub Actions + Windows)
 folder = os.path.dirname(os.path.abspath(__file__))
 
-# paths to the eleven scraper scripts
+# ----- AUTO PATCH: make all region scrapers wait longer + dump debug on failure -----
+def patch_scraper_file(path: str) -> None:
+    txt = open(path, "r", encoding="utf-8").read()
+
+    # 1) replace wait_for_listing_render with a robust version + debug dumps
+    wait_pat = re.compile(r"(?ms)^def wait_for_listing_render\(.*?\n(?=^\S|\Z)")
+    new_wait = """def wait_for_listing_render(driver: webdriver.Chrome, timeout: int = 120) -> None:
+    # Always wait for body first
+    WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.TAG_NAME, "body"))
+    )
+
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "a[href^='/tournaments/']"))
+        )
+        return
+    except Exception:
+        # dump debug so we can see what GitHub is actually loading
+        try:
+            with open("debug_page.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source or "")
+        except Exception:
+            pass
+        try:
+            driver.save_screenshot("debug_page.png")
+        except Exception:
+            pass
+        try:
+            body_txt = driver.find_element(By.TAG_NAME, "body").text
+            print("[DEBUG body text snippet]", body_txt[:800], flush=True)
+        except Exception:
+            pass
+        raise
+"""
+    if "def wait_for_listing_render" in txt:
+        txt = wait_pat.sub(new_wait + "\n", txt, count=1)
+
+    # 2) ensure any calls that pass timeout=40 become timeout=120
+    txt = txt.replace("wait_for_listing_render(driver, timeout=40)", "wait_for_listing_render(driver, timeout=120)")
+
+    open(path, "w", encoding="utf-8").write(txt)
+
+# Patch all region scripts in this folder (does not touch run_scrapers.py itself)
+for fname in os.listdir(folder):
+    if fname.endswith(".py") and fname not in ("run_scrapers.py",):
+        patch_scraper_file(os.path.join(folder, fname))
+
+# ----- RUN SCRIPTS -----
 scripts = [
     os.path.join(folder, "yorkshire.py"),
     os.path.join(folder, "northwest.py"),

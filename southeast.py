@@ -87,6 +87,7 @@ def start_driver() -> webdriver.Chrome:
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-gpu")
     return webdriver.Chrome(options=opts)
+
 def wait_for_listing_render(driver: webdriver.Chrome, timeout: int = 90) -> None:
     # Wait for page body first
     WebDriverWait(driver, timeout).until(
